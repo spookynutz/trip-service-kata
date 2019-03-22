@@ -4,29 +4,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.craftedsw.tripservicekata.exception.UserNotLoggedInException;
+import org.craftedsw.tripservicekata.user.IUserSession;
 import org.craftedsw.tripservicekata.user.User;
-import org.craftedsw.tripservicekata.user.UserSession;
 
 public class TripService {
 
+	private IUserSession userSession;
+	private TripRepository tripDAO;
+
+	public TripService(IUserSession userSession, TripRepository tripDAO) {
+		this.userSession = userSession;
+		this.tripDAO = tripDAO;
+	}
+
 	public List<Trip> getTripsByUser(User user) throws UserNotLoggedInException {
-		List<Trip> tripList = new ArrayList<Trip>();
-		User loggedUser = UserSession.getInstance().getLoggedUser();
-		boolean isFriend = false;
-		if (loggedUser != null) {
-			for (User friend : user.getFriends()) {
-				if (friend.equals(loggedUser)) {
-					isFriend = true;
-					break;
-				}
-			}
-			if (isFriend) {
-				tripList = TripDAO.findTripsByUser(user);
-			}
-			return tripList;
-		} else {
+
+		if (this.userSession.getLoggedUser() == null) {
 			throw new UserNotLoggedInException();
 		}
+
+		if (user.getFriends().contains(this.userSession.getLoggedUser())){
+			return tripDAO.findTripsByUser(user);
+		}
+
+		return new ArrayList<Trip>();
 	}
-	
+
 }
